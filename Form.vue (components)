@@ -8,21 +8,21 @@
             v-model="formData.username"
             label="Usuario de red"
             outlined
-            rules="[val => !!val || 'Campo requerido']"
+            :rules="[val => !!val || 'Campo requerido']"
             class="q-mb-md"
           />
           <q-input
-            v-model="formData.name"
+            v-model="formData.first_name"
             label="Nombres"
             outlined
-            rules="[val => !!val || 'Campo requerido']"
+            :rules="[val => !!val || 'Campo requerido']"
             class="q-mb-md"
           />
           <q-input
             v-model="formData.last_name"
             label="Apellidos"
             outlined
-            rules="[val => !!val || 'Campo requerido']"
+            :rules="[val => !!val || 'Campo requerido']"
             class="q-mb-md"
           />
           <q-input
@@ -35,12 +35,25 @@
           <q-select
             filled
             v-model="selectedClients"
-            :options="clients"
+            :options="client_id"
             option-value="id"
             option-label="name"
             label="Selecciona un cliente"
             class="q-mb-md"
+
           />
+
+          <q-select
+            filled
+            v-model="selectedRoles"
+            :options="role_id"
+            option-value="id"
+            option-label="name"
+            label="Selecciona un rol"
+            class="q-mb-md"
+
+          />
+
           <div class="row justify-end q-gutter-sm">
             <q-btn
               label="Guardar cambios"
@@ -57,7 +70,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
-import { fetchClients , registerUserService } from './form/services';
+import { fetchClients , fetchRoles, registerUserService } from './form/services';
+import { notify } from 'src/boot/notify-defaults';
 
 const props = defineProps({
   isFormModalOpen: Boolean,
@@ -73,7 +87,7 @@ onMounted(() => {
 
 const formData = ref({
   username: '',
-  name: '',
+  first_name: '',
   last_name: '',
   email: '',
   password: '',
@@ -81,37 +95,63 @@ const formData = ref({
   is_da: true,
   nit: '',
   domain: '',
+  client_id: '',
 
 });
 
 const selectedClients = ref(null);
-const clients = ref([]);
-
-//var clientes = await fetchClients();
-
+const client_id = ref([]);
+const selectedRoles = ref(null);
+const role_id = ref([]);
 
 onMounted(async () => {
-  clients.value = await fetchClients();
+  client_id.value = await fetchClients();
 });
 
+onMounted(async () => {
+  role_id.value = await fetchRoles();
+});
+
+
+
 onMounted(() => {
-  if (selectedClients.value !== null && clients.value.some(clients => clients === selectedClients.value)) {
-    formData.value.clients = selectedClients.value;
+  
+  if (selectedClients.value !== null && client_id.value.some(client_id => client_id === selectedClients.value)) {
+    formData.value.client_id = selectedClients.value;
   }
+  if (selectedRoles.value !== null && role_id.value.some(role_id => role_id === selectedRoles.value)) {
+    formData.value.role_id = selectedRoles.value;}
 });
 
 async function handleSubmit() {
-  formData.value.clients = uuidv4();
-  formData.value.role_id = uuidv4();
+  client_id._value.map((e)=>{
+   
+    if( e.is_active){
+      formData.value.client_id = e.id;
+      
+    }
+ })
+
+ role_id._value.map((e)=>{
+    
+    if( e.is_active){
+      formData.value.role_id = e.id;
+      
+    }
+ })
+
+  
 
   const response = await registerUserService(formData.value);
-
-  if(response && response.success) {
+  
+  if(response) {
     closeModal();
-    console.log(response);
+    
     resetFormData();
     emit('save-user', formData.value);
+    notify("Sucessful")
   } else {
+    notify("Error")
     console.error('Error al registrar el usuario', response);
   }
 }
