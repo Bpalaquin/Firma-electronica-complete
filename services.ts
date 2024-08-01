@@ -5,6 +5,7 @@ import { IUserRegisterData } from "./interfaces";
 export const fetchClients = async() => {
     try {
       const response = await api.get('/clients'); 
+      
       return response;
     } catch (error) {
       console.error('Error al obtener clientes:', error);
@@ -12,9 +13,21 @@ export const fetchClients = async() => {
     }
 };
 
+
+export const fetchRoles = async() => {
+    try {
+      const response = await api.get('/roles'); 
+      
+      return response;
+    } catch (error) {
+      console.error('Error al obtener los roles:', error);
+      return [];
+    }
+};
+
 export const registerUserService = async (clientsData: IUserRegisterData): Promise<any> => {
     try{
-        return await api.post('/clients',clientsData);
+        return await api.post('/users',clientsData);
     }catch (error: any){
         console.error(error);
         notify(`Ocurrió un error obtener los clientes: ${error?.response?.data?.message || 'Error desconocido'}`, 'negative');
@@ -31,4 +44,7 @@ export const updateUserService = async(clientsData: IUserRegisterData): Promise<
 export const deleteUserService = async(id: string): Promise<any> =>{
     //delet by ID
     return null;
+
+
+
 };
