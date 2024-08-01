@@ -8,4 +8,5 @@ export interface IUserRegisterData{
     role_id: string;
     is_da: true;
     image_url: string;
+    client_id: string;
 }
