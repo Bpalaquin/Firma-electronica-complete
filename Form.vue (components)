@@ -7,29 +7,30 @@
           <q-input
             v-model="formData.username"
             label="Usuario de red"
+            @blur="getUserData"
             outlined
-            :rules="[val => !!val || 'Campo requerido']"
+            :rules="[(val) => !!val || 'Campo requerido']"
             class="q-mb-md"
           />
           <q-input
             v-model="formData.first_name"
             label="Nombres"
             outlined
-            :rules="[val => !!val || 'Campo requerido']"
+            :rules="[(val) => !!val || 'Campo requerido']"
             class="q-mb-md"
           />
           <q-input
             v-model="formData.last_name"
             label="Apellidos"
             outlined
-            :rules="[val => !!val || 'Campo requerido']"
+            :rules="[(val) => !!val || 'Campo requerido']"
             class="q-mb-md"
           />
           <q-input
             v-model="formData.email"
             label="Correo Electrónico"
             outlined
-            :rules="[val => !!val || 'Campo requerido', validateEmail]"
+            :rules="[(val) => !!val || 'Campo requerido', validateEmail]"
             class="q-mb-md"
           />
           <q-select
@@ -40,7 +41,6 @@
             option-label="name"
             label="Selecciona un cliente"
             class="q-mb-md"
-
           />
 
           <q-select
@@ -51,15 +51,10 @@
             option-label="name"
             label="Selecciona un rol"
             class="q-mb-md"
-
           />
 
           <div class="row justify-end q-gutter-sm">
-            <q-btn
-              label="Guardar cambios"
-              type="submit"
-              color="primary"
-            />
+            <q-btn label="Guardar cambios" type="submit" color="primary" />
           </div>
         </q-form>
       </q-card-section>
@@ -70,7 +65,12 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
-import { fetchClients , fetchRoles, registerUserService } from './form/services';
+import {
+  fetchClients,
+  fetchRoles,
+  registerUserService,
+  fetchUserData,
+} from './form/services';
 import { notify } from 'src/boot/notify-defaults';
 
 const props = defineProps({
@@ -96,7 +96,6 @@ const formData = ref({
   nit: '',
   domain: '',
   client_id: '',
-
 });
 
 const selectedClients = ref(null);
@@ -112,56 +111,54 @@ onMounted(async () => {
   role_id.value = await fetchRoles();
 });
 
-
-
 onMounted(() => {
-  
-  if (selectedClients.value !== null && client_id.value.some(client_id => client_id === selectedClients.value)) {
+  if (
+    selectedClients.value !== null &&
+    client_id.value.some((client_id) => client_id === selectedClients.value)
+  ) {
     formData.value.client_id = selectedClients.value;
   }
-  if (selectedRoles.value !== null && role_id.value.some(role_id => role_id === selectedRoles.value)) {
-    formData.value.role_id = selectedRoles.value;}
+  console.log("roles", role_id)
+  if (
+    selectedRoles.value !== null &&
+    role_id.value.some((role_id) => role_id === selectedRoles.value)
+  ) {
+    formData.value.role_id = selectedRoles.value;
+  }
 });
 
 async function handleSubmit() {
-  client_id._value.map((e)=>{
-   
-    if( e.is_active){
+  client_id._value.map((e) => {
+    if (e.is_active) {
       formData.value.client_id = e.id;
-      
     }
- })
+  });
 
- role_id._value.map((e)=>{
-    
-    if( e.is_active){
+  role_id._value.map((e) => {
+    if (e.is_active) {
       formData.value.role_id = e.id;
-      
     }
- })
-
-  
+  });
 
   const response = await registerUserService(formData.value);
-  
-  if(response) {
+
+  if (response) {
     closeModal();
-    
+
     resetFormData();
     emit('save-user', formData.value);
-    notify("Sucessful")
+    notify('Sucessful');
   } else {
-    notify("Error")
+    notify('Error');
     console.error('Error al registrar el usuario', response);
   }
 }
 
 function resetFormData() {
-  Object.keys(formData.value).forEach(key => {
+  Object.keys(formData.value).forEach((key) => {
     formData.value[key] = '';
   });
 }
-
 
 function closeModal() {
   isOpenLocal.value = false;
@@ -169,7 +166,17 @@ function closeModal() {
 
 function validateEmail(value) {
   const emailPattern = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
-  return emailPattern.test(value) || 'Por favor ingrese un correo electrónico válido';
+  return (
+    emailPattern.test(value) || 'Por favor ingrese un correo electrónico válido'
+  );
+}
+async function getUserData() {
+  const dato = await fetchUserData(formData._value.username);
+  if (dato.data) {
+    formData._value.first_name = dato.data.first_name;
+    formData._value.last_name = dato.data.last_name;
+    formData._value.email = dato.data.email;
+  }
 }
 </script>
 
@@ -186,5 +193,4 @@ function validateEmail(value) {
 .text-h4 {
   color: #333;
 }
-
 </style>
